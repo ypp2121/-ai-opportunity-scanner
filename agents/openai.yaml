@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Opportunity Scanner"
+  short_description: "Discover hidden business opportunities unlocked by AI-driven cost reduction across any industry"
+  default_prompt: "Analyze the [industry] value chain and identify tasks that were previously uneconomical due to high labor costs but have become viable because AI dramatically lowers marginal costs"
