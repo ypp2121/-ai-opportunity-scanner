@@ -71,8 +71,118 @@ def load_config() -> dict:
 # Search backends
 # ---------------------------------------------------------------------------
 
+COUNTRY_CODES = {
+    "United States": "US",
+    "Canada": "CA",
+    "Germany": "DE",
+    "United Kingdom": "GB",
+    "France": "FR",
+    "Spain": "ES",
+    "Italy": "IT",
+    "Netherlands": "NL",
+    "Poland": "PL",
+    "Sweden": "SE",
+}
+
+
+class BraveSearchBackend:
+    """Brave Search API — recommended default (free tier: 2000 queries/month).
+
+    Requires BRAVE_API_KEY. Supports both web search and news search endpoints.
+    Docs: https://api-dashboard.search.brave.com/app/documentation/web-search
+    """
+
+    BASE_WEB = "https://api.search.brave.com/res/v1/web/search"
+    BASE_NEWS = "https://api.search.brave.com/res/v1/news/search"
+
+    def __init__(self):
+        self.api_key = os.environ.get("BRAVE_API_KEY", "")
+        if not self.api_key:
+            log.warning("BRAVE_API_KEY not set – Brave Search backend disabled")
+
+    @property
+    def available(self) -> bool:
+        return bool(self.api_key)
+
+    def _headers(self) -> dict:
+        return {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "X-Subscription-Token": self.api_key,
+        }
+
+    def search_web(self, query: str, country: str = "", count: int = 10) -> list[dict]:
+        if not self.available:
+            return []
+        params = {
+            "q": query,
+            "count": min(count, 20),
+            "freshness": "pw",
+            "text_decorations": False,
+            "search_lang": "en",
+        }
+        cc = COUNTRY_CODES.get(country, "")
+        if cc:
+            params["country"] = cc
+        try:
+            resp = requests.get(
+                self.BASE_WEB,
+                headers=self._headers(),
+                params=params,
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            results = []
+            for item in data.get("web", {}).get("results", []):
+                results.append({
+                    "title": item.get("title", ""),
+                    "link": item.get("url", ""),
+                    "snippet": item.get("description", ""),
+                    "publishedAt": item.get("page_age", ""),
+                })
+            return results
+        except Exception as exc:
+            log.error("Brave web search failed for '%s': %s", query, exc)
+            return []
+
+    def search_news(self, query: str, country: str = "", count: int = 10) -> list[dict]:
+        if not self.available:
+            return []
+        params = {
+            "q": query,
+            "count": min(count, 20),
+            "freshness": "pw",
+            "search_lang": "en",
+        }
+        cc = COUNTRY_CODES.get(country, "")
+        if cc:
+            params["country"] = cc
+        try:
+            resp = requests.get(
+                self.BASE_NEWS,
+                headers=self._headers(),
+                params=params,
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            results = []
+            for item in data.get("results", []):
+                results.append({
+                    "title": item.get("title", ""),
+                    "link": item.get("url", ""),
+                    "snippet": item.get("description", ""),
+                    "publishedAt": item.get("age", ""),
+                })
+            return results
+        except Exception as exc:
+            log.error("Brave news search failed for '%s': %s", query, exc)
+            return []
+
+
 class GoogleSearchBackend:
-    """Uses Google Custom Search JSON API (requires GOOGLE_API_KEY + GOOGLE_CSE_ID)."""
+    """Google Custom Search JSON API (requires GOOGLE_API_KEY + GOOGLE_CSE_ID)."""
 
     def __init__(self):
         self.api_key = os.environ.get("GOOGLE_API_KEY", "")
@@ -109,7 +219,7 @@ class GoogleSearchBackend:
 
 
 class SerpApiBackend:
-    """Uses SerpApi (requires SERPAPI_KEY)."""
+    """SerpApi (requires SERPAPI_KEY)."""
 
     def __init__(self):
         self.api_key = os.environ.get("SERPAPI_KEY", "")
@@ -145,7 +255,7 @@ class SerpApiBackend:
 
 
 class NewsApiBackend:
-    """Uses NewsAPI.org (requires NEWSAPI_KEY)."""
+    """NewsAPI.org (requires NEWSAPI_KEY)."""
 
     def __init__(self):
         self.api_key = os.environ.get("NEWSAPI_KEY", "")
@@ -228,15 +338,19 @@ def score_relevance(title: str, snippet: str) -> float:
 # ---------------------------------------------------------------------------
 
 def run_scan(config: dict) -> list[MarketLead]:
+    brave = BraveSearchBackend()
     google = GoogleSearchBackend()
     serpapi = SerpApiBackend()
     newsapi = NewsApiBackend()
 
-    backends_available = sum([google.available, serpapi.available, newsapi.available])
+    backends_available = sum([
+        brave.available, google.available, serpapi.available, newsapi.available,
+    ])
     if backends_available == 0:
         log.error(
             "No search backend is configured. "
-            "Set at least one of: GOOGLE_API_KEY+GOOGLE_CSE_ID, SERPAPI_KEY, NEWSAPI_KEY"
+            "Set at least one of: BRAVE_API_KEY (recommended), "
+            "GOOGLE_API_KEY+GOOGLE_CSE_ID, SERPAPI_KEY, NEWSAPI_KEY"
         )
         return []
 
@@ -252,7 +366,10 @@ def run_scan(config: dict) -> list[MarketLead]:
                     query = f"{term} {country['name']}"
                     raw_results: list[dict] = []
 
-                    if google.available:
+                    if brave.available:
+                        raw_results.extend(brave.search_web(query, country=country["name"], count=5))
+                        raw_results.extend(brave.search_news(query, country=country["name"], count=3))
+                    elif google.available:
                         raw_results.extend(google.search(query, num=5))
                     elif serpapi.available:
                         for r in serpapi.search(query, num=5):
@@ -261,6 +378,7 @@ def run_scan(config: dict) -> list[MarketLead]:
                                 "link": r.get("link", ""),
                                 "snippet": r.get("snippet", ""),
                             })
+
                     if newsapi.available:
                         for art in newsapi.search(query, num=3):
                             raw_results.append({
@@ -330,7 +448,6 @@ def generate_report(leads: list[MarketLead], config: dict) -> str:
         f"",
     ]
 
-    # Summary stats
     lines.append("## 概览统计\n")
     lines.append("| 产品类别 | 线索数 | 高相关度 (>0.3) |")
     lines.append("|----------|--------|-----------------|")
@@ -347,7 +464,6 @@ def generate_report(leads: list[MarketLead], config: dict) -> str:
         lines.append(f"| {rv['label']} | {len(region_leads)} |")
     lines.append("")
 
-    # Detailed leads by product
     for pk, pv in products.items():
         cat_leads = [l for l in leads if l.product_category == pk]
         lines.append(f"---\n")
@@ -377,7 +493,6 @@ def generate_report(leads: list[MarketLead], config: dict) -> str:
                         lines.append(f"   - 日期: {lead.published_date}")
                     lines.append("")
 
-    # Actionable next-steps
     lines.append("---\n")
     lines.append("## 建议操作\n")
 

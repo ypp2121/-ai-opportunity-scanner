@@ -87,11 +87,14 @@ ai-opportunity-scanner/
 
 至少需要配置以下 **一组** API 密钥 (在仓库 Settings → Secrets and variables → Actions 中添加):
 
-| 方案 | 所需 Secrets | 获取方式 |
-|------|-------------|---------|
-| Google Custom Search | `GOOGLE_API_KEY` + `GOOGLE_CSE_ID` | [Google Cloud Console](https://console.cloud.google.com/) |
-| SerpApi | `SERPAPI_KEY` | [serpapi.com](https://serpapi.com/) |
-| NewsAPI (新闻补充) | `NEWSAPI_KEY` | [newsapi.org](https://newsapi.org/) |
+| 方案 | 所需 Secrets | 获取方式 | 免费额度 |
+|------|-------------|---------|---------|
+| **Brave Search (推荐)** | `BRAVE_API_KEY` | [brave.com/search/api](https://brave.com/search/api/) | 每月 2000 次 |
+| Google Custom Search | `GOOGLE_API_KEY` + `GOOGLE_CSE_ID` | [Google Cloud Console](https://console.cloud.google.com/) | 每天 100 次 |
+| SerpApi | `SERPAPI_KEY` | [serpapi.com](https://serpapi.com/) | 每月 100 次 |
+| NewsAPI (新闻补充) | `NEWSAPI_KEY` | [newsapi.org](https://newsapi.org/) | 开发者免费 |
+
+> **推荐使用 Brave Search API**：免费额度最多 (2000次/月)，同时支持 Web 搜索和 News 搜索两个端点，一个 key 即可覆盖网页和新闻信息源。
 
 ### 本地运行
 
@@ -102,8 +105,8 @@ pip install -r requirements.txt
 # 生成示例报告 (无需 API key)
 python3 scripts/generate_sample_report.py
 
-# 实际扫描 (需要至少一个 API key)
-export SERPAPI_KEY="your-key"
+# 实际扫描 (推荐使用 Brave API)
+export BRAVE_API_KEY="your-key"
 python3 scripts/market_scanner.py
 ```
 
