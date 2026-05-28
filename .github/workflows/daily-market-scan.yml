@@ -29,18 +29,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        run: |
+          git clone --depth 1 --branch "${GITHUB_REF_NAME:-main}" "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+        run: python3 --version
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: python3 -m pip install -r requirements.txt
 
       - name: Run market scanner
-        run: python scripts/market_scanner.py
+        run: python3 scripts/market_scanner.py
         continue-on-error: true
 
       - name: Commit and push report
@@ -58,14 +58,6 @@ jobs:
           else
             echo "No report generated – skipping commit"
           fi
-
-      - name: Upload report as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: market-report-${{ github.run_id }}
-          path: reports/market-report-*.md
-          retention-days: 30
 
       - name: Notify on failure
         if: failure()
