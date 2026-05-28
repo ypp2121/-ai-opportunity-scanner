@@ -1,0 +1,127 @@
+# 海外储能/太阳能市场需求扫描 - 配置文件
+
+regions:
+  north_america:
+    label: "北美市场"
+    countries:
+      - name: "United States"
+        label: "美国"
+        languages: ["en"]
+      - name: "Canada"
+        label: "加拿大"
+        languages: ["en"]
+
+  europe:
+    label: "欧洲市场"
+    countries:
+      - name: "Germany"
+        label: "德国"
+        languages: ["en", "de"]
+      - name: "United Kingdom"
+        label: "英国"
+        languages: ["en"]
+      - name: "France"
+        label: "法国"
+        languages: ["en"]
+      - name: "Spain"
+        label: "西班牙"
+        languages: ["en"]
+      - name: "Italy"
+        label: "意大利"
+        languages: ["en"]
+      - name: "Netherlands"
+        label: "荷兰"
+        languages: ["en"]
+      - name: "Poland"
+        label: "波兰"
+        languages: ["en"]
+      - name: "Sweden"
+        label: "瑞典"
+        languages: ["en"]
+
+products:
+  energy_storage_cells:
+    label: "储能电芯"
+    search_terms:
+      - "energy storage battery cells procurement"
+      - "BESS battery cells supplier wanted"
+      - "lithium battery cells bulk purchase"
+      - "energy storage cells tender"
+      - "LFP battery cells RFQ"
+      - "battery cell supply agreement"
+      - "energy storage cell manufacturer sourcing"
+      - "ESS battery cells import"
+
+  pcs:
+    label: "PCS (储能变流器)"
+    search_terms:
+      - "power conversion system procurement"
+      - "PCS inverter tender"
+      - "energy storage inverter supplier"
+      - "battery inverter RFQ"
+      - "PCS energy storage purchase"
+      - "bidirectional inverter sourcing"
+      - "grid-tied energy storage inverter"
+      - "hybrid inverter bulk order"
+
+  energy_storage_cabinet:
+    label: "储能柜"
+    search_terms:
+      - "energy storage cabinet procurement"
+      - "battery cabinet supplier"
+      - "BESS cabinet system RFQ"
+      - "energy storage enclosure tender"
+      - "containerized energy storage purchase"
+      - "battery storage cabinet system"
+      - "C&I energy storage system procurement"
+      - "commercial battery storage system supplier"
+
+  solar_panels:
+    label: "太阳能板"
+    search_terms:
+      - "solar panel procurement tender"
+      - "solar module supplier wanted"
+      - "PV module bulk purchase"
+      - "solar panel RFQ"
+      - "photovoltaic panel sourcing"
+      - "solar module import"
+      - "solar panel wholesale supplier"
+      - "utility scale solar module tender"
+
+search_sources:
+  procurement_platforms:
+    - name: "TenderAlpha"
+      url: "https://tenderalpha.com"
+    - name: "TED (Tenders Electronic Daily)"
+      url: "https://ted.europa.eu"
+    - name: "SAM.gov"
+      url: "https://sam.gov"
+    - name: "MERX"
+      url: "https://merx.com"
+    - name: "Energy Storage News"
+      url: "https://www.energy-storage.news"
+    - name: "PV Magazine"
+      url: "https://www.pv-magazine.com"
+    - name: "Solar Power World"
+      url: "https://www.solarpowerworldonline.com"
+    - name: "Energy-Storage.news"
+      url: "https://www.energy-storage.news"
+
+  news_sources:
+    - name: "Reuters Energy"
+      url: "https://www.reuters.com/business/energy/"
+    - name: "Bloomberg NEF"
+      url: "https://about.bnef.com"
+    - name: "Utility Dive"
+      url: "https://www.utilitydive.com"
+    - name: "CleanTechnica"
+      url: "https://cleantechnica.com"
+    - name: "GTM (GreenTech Media)"
+      url: "https://www.greentechmedia.com"
+    - name: "PV Tech"
+      url: "https://www.pv-tech.org"
+
+report:
+  output_dir: "reports"
+  format: "markdown"
+  keep_days: 90
