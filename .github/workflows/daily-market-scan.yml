@@ -47,6 +47,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           DATE=$(date -u +%Y-%m-%d)
           REPORT="reports/market-report-${DATE}.md"
           if [ -f "$REPORT" ]; then
